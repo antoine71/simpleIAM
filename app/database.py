@@ -6,6 +6,7 @@ engine = create_engine(settings.postgres_sdn)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:

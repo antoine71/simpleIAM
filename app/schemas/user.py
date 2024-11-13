@@ -8,10 +8,8 @@ class UserCreateInput(BaseModel):
     password: str
 
     def to_db_model(self):
-        return DbUser(
-            email=self.email,
-            hashed_password=hash_password(self.password)
-        )
+        return DbUser(email=self.email, hashed_password=hash_password(self.password))
+
 
 class UserCreateResponse(BaseModel):
     email: EmailStr
