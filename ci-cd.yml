@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on: [push]
+jobs:
+  # Linting Job
+  lint:
+    runs-on: python:3.13-alpine3.20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+      - name: Run Lint
+        run: black --check app tests
+
+  # Security Checks
+  security:
+    runs-on: python:3.13-alpine3.20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: pip install bandit
+      - name: Run Bandit Security Scan
+        run: bandit -r app
+
+  # Testing Job
+  test:
+    runs-on: python:3.13-alpine3.20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-tests.txt
+      - name: Run Tests
+        run: pytest tests
