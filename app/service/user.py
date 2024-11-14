@@ -1,6 +1,7 @@
 from models.user import DbUser
 from schemas.user import UserCreateInput
-from sqlalchemy.orm import Session, select
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 
 def create_user(session: Session, user: UserCreateInput):
@@ -12,5 +13,5 @@ def create_user(session: Session, user: UserCreateInput):
 
 def get_user_by_email(session: Session, email: str) -> DbUser | None:
     statement = select(DbUser).where(DbUser.email == email)
-    result = session.scalar(statement).first()
+    result = session.scalars(statement).first()
     return result

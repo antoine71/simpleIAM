@@ -1,4 +1,4 @@
-from api.routes import user
+from routers import user
 from fastapi import FastAPI
 
 app = FastAPI()
