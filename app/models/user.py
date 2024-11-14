@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from uuid import uuid4
-from datetime import datetime, UTC
-from sqlalchemy import Column, UUID, String, Boolean, DateTime
+
+from sqlalchemy import UUID, Boolean, Column, DateTime, String
 
 from .base import Base
 

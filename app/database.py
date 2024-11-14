@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
 from config import settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-engine = create_engine(settings.postgres_sdn)
+engine = create_engine(settings.databse_sdn)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

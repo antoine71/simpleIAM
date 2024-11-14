@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
-from models.user import DbUser
 from core.security import hash_password
+from models.user import DbUser
+from pydantic import BaseModel, EmailStr
 
 
 class UserCreateInput(BaseModel):

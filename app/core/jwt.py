@@ -1,6 +1,7 @@
+from datetime import UTC, datetime, timedelta
+
 import jwt
 from config import settings
-from datetime import datetime, timedelta, UTC
 
 
 def encode_access_token(user_id: str):

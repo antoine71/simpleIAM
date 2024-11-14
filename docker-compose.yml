@@ -3,9 +3,9 @@ services:
     image: docker.io/library/postgres:latest
     container_name: postgres_db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: users_db
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: db_simple_iam
     ports:
       - "5432:5432"
     networks:
