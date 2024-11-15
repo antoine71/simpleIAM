@@ -1,6 +1,6 @@
 from core.jwt import encode_access_token
 from core.passwords import validate_password
-from database import get_db
+from dependencies.database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from schemas.user import (
     UserCreateInput,
