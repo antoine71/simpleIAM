@@ -20,6 +20,8 @@ def register_user(
     response_model=UserCreateResponse,
     db: Session = Depends(get_db),
 ):
+    if get_user_by_email(db, user.email):
+        raise HTTPException(400, "This email is not available")
     create_user(db, user)
     return user
 

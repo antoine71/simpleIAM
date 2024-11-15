@@ -163,4 +163,5 @@ cython_debug/
 
 # local dev environment
 database.db
+test.db
 .vscode
