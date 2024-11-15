@@ -22,6 +22,7 @@ if db_file.exists():
 engine = create_engine(f"sqlite:///{db_file}")
 Base.metadata.create_all(bind=engine)
 
+
 def get_test_db():
     with Session(engine) as session:
         yield session
