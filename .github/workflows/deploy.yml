@@ -36,7 +36,7 @@ env:
   ECS_CLUSTER: app-cluster                 # set this to your Amazon ECS cluster name
                # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY_MIGRATION: simple-iam/migration          # set this to your Amazon ECR repository name
-  CONTAINER_NAME_MIGRATIONS: migration           # set this to the name of the container in the
+  CONTAINER_NAME_MIGRATION: migration           # set this to the name of the container in the
   ECS_TASK_DEFINITION_RUN_MIGRATIONS: .aws/db-migrations-task-revision2-AWS-CLI-input.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   ECR_REPOSITORY_APP: simple-iam/app           # set this to your Amazon ECR repository name
