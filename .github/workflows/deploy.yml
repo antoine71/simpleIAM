@@ -16,8 +16,8 @@
 #
 # 3. Store your ECS task definition as a JSON file in your repository.
 #    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
-#    Replace the value of the `ECS_TASK_DEFINITION` environment variable in the workflow below with the path to the JSON file.
-#    Replace the value of the `CONTAINER_NAME` environment variable in the workflow below with the name of the container
+#    Replace the value of the `ECS_TASK_DEFINITION_RUN_APP` environment variable in the workflow below with the path to the JSON file.
+#    Replace the value of the `CONTAINER_NAME_APP` environment variable in the workflow below with the name of the container
 #    in the `containerDefinitions` section of the task definition.
 #
 # 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
@@ -32,19 +32,77 @@ on:
       - 'v*'
 
 env:
-  AWS_REGION: eu-west-3                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: simple-iam/app           # set this to your Amazon ECR repository name
-  ECS_SERVICE: simple-iam-app                 # set this to your Amazon ECS service name
+  AWS_REGION: eu-west-3      
   ECS_CLUSTER: app-cluster                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
+               # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY_MIGRATION: simple-iam/migration          # set this to your Amazon ECR repository name
+  CONTAINER_NAME_MIGRATIONS: migration           # set this to the name of the container in the
+  ECS_TASK_DEFINITION_RUN_MIGRATIONS: .aws/db-migrations-task-revision2-AWS-CLI-input.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: simple-iam-app           # set this to the name of the container in the
+  ECR_REPOSITORY_APP: simple-iam/app           # set this to your Amazon ECR repository name
+  CONTAINER_NAME_APP: simple-iam-app           # set this to the name of the container in the
+  ECS_TASK_DEFINITION_RUN_APP: .aws/simple_iam-app-task-definition-revision7-AWS-CLI-input.json # set this to the path to your Amazon ECS task definition
+  ECS_SERVICE_APP: simple-iam-app                 # set this to your Amazon ECS service name
+
                                                # containerDefinitions section of your task definition
 
 permissions:
   contents: read
 
 jobs:
+  run-migration:
+    name: Run Database Migration
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_MIGRATION:$IMAGE_TAG -f Dockerfile.migration .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_MIGRATION:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_MIGRATION:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION_RUN_MIGRATION }}
+        container-name: ${{ env.CONTAINER_NAME_MIGRATION }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        run-task: true
+        run-task-security-groups: ${{ env.SIMPLE_IAM_SG }}
+        run-task-subnets: ${{ env.SIMPLE_IAM_SUBNET }}
+        run-task-assign-public-IP: true
+        run-task-launch-type: FARGATE
+        wait-for-task-stopped: true
+
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -74,22 +132,22 @@ jobs:
         # Build a docker container and
         # push it to ECR so that it can
         # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile.app .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_APP:$IMAGE_TAG -f Dockerfile.app .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_APP:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_APP:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION }}
-        container-name: ${{ env.CONTAINER_NAME }}
+        task-definition: ${{ env.ECS_TASK_DEFINITION_RUN_APP }}
+        container-name: ${{ env.CONTAINER_NAME_APP }}
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
+        service: ${{ env.ECS_SERVICE_APP }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
