@@ -96,8 +96,8 @@ jobs:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         cluster: ${{ env.ECS_CLUSTER }}
         run-task: true
-        run-task-security-groups: ${{ env.SIMPLE_IAM_SG }}
-        run-task-subnets: ${{ env.SIMPLE_IAM_SUBNET }}
+        run-task-security-groups: ${{ secrets.SIMPLE_IAM_SG }}
+        run-task-subnets: ${{ secrets.SIMPLE_IAM_SUBNET }}
         run-task-assign-public-IP: true
         run-task-launch-type: FARGATE
         wait-for-task-stopped: true
