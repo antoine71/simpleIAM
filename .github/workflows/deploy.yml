@@ -98,7 +98,7 @@ jobs:
         run-task: true
         run-task-security-groups: ${{ secrets.SIMPLE_IAM_SG }}
         run-task-subnets: ${{ secrets.SIMPLE_IAM_SUBNET }}
-        run-task-assign-public-IP: true
+        run-task-assign-public-IP: ENABLED
         run-task-launch-type: FARGATE
         wait-for-task-stopped: true
 
